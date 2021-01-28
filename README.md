@@ -1,2 +1,2 @@
-# node-yandes-alise
+# node-yandex-alise
 Алиса Яндекс
