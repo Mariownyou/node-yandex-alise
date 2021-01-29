@@ -5,7 +5,10 @@ from __future__ import unicode_literals
 # Импортируем модули для работы с JSON и логами.
 import json
 import logging
+
+# Импортируем datetime и timetable
 import datetime as dt
+from lessons import timetable
 
 # Импортируем подмодули Flask для запуска веб-сервиса.
 from flask import Flask, request, jsonify
@@ -58,7 +61,8 @@ def handle_dialog(req, res):
             ]
         }
 
-        res['response']['text'] = get_timetable()
+        
+        res['response']['text'] = convert_timetable()
         res['response']['buttons'] = get_suggests(user_id)
         return
 
@@ -104,47 +108,32 @@ def get_suggests(user_id):
 
     return suggests
 
-# Расписание уроков
-timetable = {
-    'Monday': {
-        'day': 'Понедельник',
-        'lessons': [
-            'Экономика',
-            'География',
-            'История',
-            'Алгебра',
-            'Алгебра',
-            'Литература',
-            'Немецкий',
-            'Немецкий'
-        ]
-    },
-    'Thuesday': {
-        'day': 'Вторник',
-        'lessons': [
-            'Информатика',
-            'Английский',
-            'Русский',
-            'Химия',
-            'Обществознание',
-            'Обществознание',
-        ]
-    },
-}
-
 # Функция возвращает две расписание на текущий день недели
-def get_timetable():
-    day = (dt.datetime.now()).strftime('%A')
-    day = 'Monday'
+def get_timetable(day: str) -> dict:
     lessons = timetable[day]
     return lessons
 
+def convert_timetable() -> str:
+    day = (dt.datetime.now()).strftime('%A')
+    if day in ['Saturday', 'Sunday']:
+        text = 'Сегодня нет уроков радуйся дурачок'
+        if 'day' == 'Saturday':
+            return text
+        else:
+            lessons = get_timetable('Monday')
+            lessons_str = '\n'.join(lessons['lessons'])
+            text += f' а вот завтра есть, сейчас скажу каки:\n{lessons_str}'
+    lessons = get_timetable(day)
+    lessons_str = '\n'.join(lessons['lessons'])
+    number_of_lessons = len(lessons['lessons'])
+    text = f"Сегодня {lessons['day']}, у тебя {number_of_lessons} уроков\n{lessons_str}"
+    return text
+
 @app.route("/api", methods=['GET'])
-def index():
-    lessons = get_timetable()
+def index() -> dict:
+    day = (dt.datetime.now()).strftime('%A')
+    lessons = get_timetable(day)
     return {
         'day': lessons['day'],
         'lessons': lessons['lessons']
     }
-
-app.run()
