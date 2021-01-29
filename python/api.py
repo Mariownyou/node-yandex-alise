@@ -8,7 +8,7 @@ import logging
 import datetime as dt
 
 # Импортируем подмодули Flask для запуска веб-сервиса.
-from flask import Flask, request
+from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 
@@ -107,7 +107,7 @@ def get_suggests(user_id):
 # Расписание уроков
 timetable = {
     'Monday': {
-        'ru': 'Понедельник',
+        'day': 'Понедельник',
         'lessons': [
             'Экономика',
             'География',
@@ -120,7 +120,7 @@ timetable = {
         ]
     },
     'Thuesday': {
-        'ru': 'Вторник',
+        'day': 'Вторник',
         'lessons': [
             'Информатика',
             'Английский',
@@ -142,4 +142,9 @@ def get_timetable():
 @app.route("/api", methods=['GET'])
 def index():
     lessons = get_timetable()
-    return lessons['ru']
+    return {
+        'day': lessons['day'],
+        'lessons': lessons['lessons']
+    }
+
+app.run()
