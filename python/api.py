@@ -61,8 +61,7 @@ def handle_dialog(req, res):
             ]
         }
 
-        
-        res['response']['text'] = convert_timetable()
+        res['response']['text'] = convert_timetable(get_current_timetable())
         res['response']['buttons'] = get_suggests(user_id)
         return
 
@@ -108,25 +107,30 @@ def get_suggests(user_id):
 
     return suggests
 
-# Функция возвращает две расписание на текущий день недели
+# Функция возвращает две расписание на день недели
 def get_timetable(day: str) -> dict:
     lessons = timetable[day]
     return lessons
 
-def convert_timetable() -> str:
+def get_current_timetable() -> dict:
     day = (dt.datetime.now()).strftime('%A')
-    if day in ['Saturday', 'Sunday']:
-        text = 'Сегодня нет уроков радуйся дурачок'
-        if 'day' == 'Saturday':
+    lessons = get_timetable(day)
+    return lessons
+
+def convert_timetable(timetable: dict) -> str:
+    day = timetable['day']
+    if day in ['Суббота', 'Воскреснье']:
+        text = 'Сегодня нет уроков, радуйся, дурачок'
+        if day == 'Суббота':
             return text
         else:
             lessons = get_timetable('Monday')
             lessons_str = '\n'.join(lessons['lessons'])
-            text += f' а вот завтра есть, сейчас скажу каки:\n{lessons_str}'
-    lessons = get_timetable(day)
-    lessons_str = '\n'.join(lessons['lessons'])
-    number_of_lessons = len(lessons['lessons'])
-    text = f"Сегодня {lessons['day']}, у тебя {number_of_lessons} уроков\n{lessons_str}"
+            text += f' а вот завтра есть, сейчас скажу какие:\n{lessons_str}'
+            return text
+    lessons_str = '\n'.join(timetable['lessons'])
+    number_of_lessons = len(timetable['lessons'])
+    text = f"Сегодня {day}, у тебя {number_of_lessons} уроков\n{lessons_str}"
     return text
 
 @app.route("/api", methods=['GET'])
@@ -137,3 +141,11 @@ def index() -> dict:
         'day': lessons['day'],
         'lessons': lessons['lessons']
     }
+
+@app.route("/api/<day>", methods=['GET'])
+def lessons(day) -> str:
+    timetable = get_timetable(day)
+    text = convert_timetable(timetable)
+    return text
+
+app.run()
