@@ -8,7 +8,12 @@ import logging
 
 # Импортируем datetime и timetable
 import datetime as dt
-from lessons import timetable
+from lessons import 
+    timetable, 
+    get_current_timetable, 
+    get_timetable, 
+    convert_timetable, 
+    parse_voice,
 
 # Импортируем подмодули Flask для запуска веб-сервиса.
 from flask import Flask, request, jsonify
@@ -55,83 +60,34 @@ def handle_dialog(req, res):
 
         sessionStorage[user_id] = {
             'suggests': [
-                "Не хочу.",
-                "Не буду.",
-                "Отстань!",
+                "Понедельник",
+                "Вторник",
+                "Среда",
+                "Четверг",
+                "Пятница"
             ]
         }
 
         res['response']['text'] = convert_timetable(get_current_timetable())
-        res['response']['buttons'] = get_suggests(user_id)
+        res['response']['buttons'] = get_suggests(user_id, sessionStorage)
         return
 
     # Обрабатываем ответ пользователя.
-    if req['request']['original_utterance'].lower() in [
-        'ладно',
-        'куплю',
-        'покупаю',
-        'хорошо',
-    ]:
-        # Пользователь согласился, прощаемся.
-        res['response']['text'] = 'Слона можно найти на Яндекс.Маркете!'
-        return
-
-    # Если нет, то убеждаем его купить слона!
-    res['response']['text'] = 'Все говорят "%s", а ты купи слона!' % (
-        req['request']['original_utterance']
-    )
-    res['response']['buttons'] = get_suggests(user_id)
+    res['response']['text'] = parse_voice(req['request']['original_utterance'].lower())
+    res['response']['buttons'] = get_suggests(user_id, sessionStorage)
+    return
 
 # Функция возвращает две подсказки для ответа.
-def get_suggests(user_id):
+def get_suggests(user_id) -> dict:
     session = sessionStorage[user_id]
 
     # Выбираем две первые подсказки из массива.
     suggests = [
         {'title': suggest, 'hide': True}
-        for suggest in session['suggests'][:2]
+        for suggest in session['suggests']
     ]
 
-    # Убираем первую подсказку, чтобы подсказки менялись каждый раз.
-    session['suggests'] = session['suggests'][1:]
-    sessionStorage[user_id] = session
-
-    # Если осталась только одна подсказка, предлагаем подсказку
-    # со ссылкой на Яндекс.Маркет.
-    if len(suggests) < 2:
-        suggests.append({
-            "title": "Ладно",
-            "url": "https://market.yandex.ru/search?text=слон",
-            "hide": True
-        })
-
     return suggests
-
-# Функция возвращает две расписание на день недели
-def get_timetable(day: str) -> dict:
-    lessons = timetable[day]
-    return lessons
-
-def get_current_timetable() -> dict:
-    day = (dt.datetime.now()).strftime('%A')
-    lessons = get_timetable(day)
-    return lessons
-
-def convert_timetable(timetable: dict) -> str:
-    day = timetable['day']
-    if day in ['Суббота', 'Воскреснье']:
-        text = 'Сегодня нет уроков, радуйся, дурачок'
-        if day == 'Суббота':
-            return text
-        else:
-            lessons = get_timetable('Monday')
-            lessons_str = '\n'.join(lessons['lessons'])
-            text += f' а вот завтра есть, сейчас скажу какие:\n{lessons_str}'
-            return text
-    lessons_str = '\n'.join(timetable['lessons'])
-    number_of_lessons = len(timetable['lessons'])
-    text = f"Сегодня {day}, у тебя {number_of_lessons} уроков\n{lessons_str}"
-    return text
 
 @app.route("/api", methods=['GET'])
 def index() -> dict:
@@ -143,9 +99,7 @@ def index() -> dict:
     }
 
 @app.route("/api/<day>", methods=['GET'])
-def lessons(day) -> str:
+def lessons(day: str) -> str:
     timetable = get_timetable(day)
     text = convert_timetable(timetable)
     return text
-
-app.run()
