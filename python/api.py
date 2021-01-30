@@ -8,12 +8,7 @@ import logging
 
 # Импортируем datetime и timetable
 import datetime as dt
-from lessons import 
-    timetable, 
-    get_current_timetable, 
-    get_timetable, 
-    convert_timetable, 
-    parse_voice,
+from lessons import timetable, get_current_timetable, get_timetable, convert_timetable, parse_voice
 
 # Импортируем подмодули Flask для запуска веб-сервиса.
 from flask import Flask, request, jsonify
@@ -69,12 +64,12 @@ def handle_dialog(req, res):
         }
 
         res['response']['text'] = convert_timetable(get_current_timetable())
-        res['response']['buttons'] = get_suggests(user_id, sessionStorage)
+        res['response']['buttons'] = get_suggests(user_id)
         return
 
     # Обрабатываем ответ пользователя.
     res['response']['text'] = parse_voice(req['request']['original_utterance'].lower())
-    res['response']['buttons'] = get_suggests(user_id, sessionStorage)
+    res['response']['buttons'] = get_suggests(user_id)
     return
 
 # Функция возвращает две подсказки для ответа.
