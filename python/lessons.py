@@ -111,12 +111,14 @@ def parse_voice(text: str) -> str:
     day = ''
     if 'понедельник' in parse:
         day = 'Monday'
-    if 'вторник' in parse:
+    elif 'вторник'in parse:
         day = 'Tuesday'
-    if 'среда' in parse:
+    elif 'среда' in parse:
         day = 'Wednesday'
-    if 'четверг' in parse:
+    elif 'четверг' in parse:
         day = 'Thursday'
-    if 'пятница' in parse:
+    elif 'пятница' in parse:
         day = 'Friday'
+    else:
+        return 'Я глупенькая, не знаю что вам ответить. Назовите интересный вам день'
     return convert_timetable(get_timetable(day), 'n')

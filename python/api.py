@@ -98,3 +98,6 @@ def lessons(day: str) -> str:
     timetable = get_timetable(day)
     text = convert_timetable(timetable)
     return text
+
+if __name__ == '__main__':
+    app.run()
